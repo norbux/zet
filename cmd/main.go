@@ -8,6 +8,8 @@ import (
 
 	"github.com/norbux/zet/config"
 	"github.com/norbux/zet/data"
+
+	err "github.com/norbux/zet/pkg/err"
 )
 
 type Zet struct {
@@ -17,19 +19,17 @@ type Zet struct {
 }
 
 // TODO: Implement flags (should Charm be considered?)
+// TODO: Write README
 func main() {
-	cfg := config.NewConfig("zet.db")
+	cfg := config.NewConfig()
 
-	db, err := data.CreateDb(cfg.DatabaseName)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	db, e := data.CreateDb(cfg.DatabaseName)
+	err.Check(e)
 
 	defer db.Close()
 
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS zet (id varchar(30) PRIMARY KEY, title varchar(256), tags text NULL)")
-	if err != nil {
+	statement, e := db.Prepare("CREATE TABLE IF NOT EXISTS zet (id varchar(30) PRIMARY KEY, title varchar(256), tags text NULL)")
+	if e != nil {
 		log.Println("Error in creating table")
 	} else {
 		log.Println("Successfully created table zet!")
@@ -41,31 +41,24 @@ func main() {
 	date := now.Format(timeFormat)
 
 	// Insert
-	statement, err = db.Prepare("INSERT INTO zet (id, title, tags) VALUES (?, ?, ?)")
-	if err != nil {
-		log.Fatal(err)
-	}
+	statement, e = db.Prepare("INSERT INTO zet (id, title, tags) VALUES (?, ?, ?)")
+	err.Check(e)
 
 	statement.Exec(date, "test", "#tag1 #tag2")
 	log.Println("Inserted the zet into database!")
 	statement.Close()
 
 	// Query
-	rows, err := db.Query("SELECT * FROM zet")
-	if err != nil {
-		log.Fatal(err)
-	}
+	rows, e := db.Query("SELECT * FROM zet")
+	err.Check(e)
 	defer rows.Close()
 
 	for rows.Next() {
 		zet := &Zet{}
-		err = rows.Scan(&zet.id, &zet.title, &zet.tags)
-		if err != nil {
-			log.Fatal(err)
-		}
+		e = rows.Scan(&zet.id, &zet.title, &zet.tags)
+		err.Check(e)
 
 		log.Printf("id:%s, title:%s, tags:%v", zet.id,
 			zet.title, zet.tags)
 	}
-
 }
