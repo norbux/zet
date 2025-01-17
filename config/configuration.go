@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	err "github.com/norbux/zet/pkg/err"
+	err "github.com/norbux/zet/pkg/err_check"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,11 +16,11 @@ type Config struct {
 func NewConfig() Config {
 
 	file, e := os.ReadFile("/Users/norberto/dev/zet/config.yaml")
-	err.Check(e)
+	err.For(e)
 
 	cfg := Config{}
 	e = yaml.Unmarshal([]byte(file), &cfg)
-	err.Check(e)
+	err.For(e)
 
 	log.Println("Read from the config file: ")
 	log.Printf("%v", cfg)
